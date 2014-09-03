@@ -1,5 +1,5 @@
-Bouncy Balls
-============
+Bouncy Ball
+===========
 
 Playing around with FRP, OpenGL, Yampa and bouncy balls. Based on
 [Cuboid](https://github.com/pedromartins/cuboid).
