@@ -1,7 +1,8 @@
 module Main where
 
+import Data.IORef
 import FRP.Yampa
-import Control.Concurrent
+import Graphics.UI.GLUT hiding (Level,Vector3(..),normalize)
 
 import Graphics (initGL, draw)
 import Types
@@ -9,9 +10,29 @@ import Types
 fallingBall :: Pos -> SF () (Pos, Vel)
 fallingBall y0 = (constant (-9.81) >>> integral) >>> ((integral >>^ (+ y0)) &&& identity)
 
+mainSF :: SF () (IO ())
+mainSF = (fallingBall 10.0) >>^ \ (pos, vel) -> putStrLn ("pos: " ++ show pos ++ ", vel: " ++ show vel) >> draw pos
+
+-- | Main, initializes Yampa and sets up reactimation loop
 main :: IO ()
-main =
-    reactimate (initGL)
-               (\ _ -> threadDelay 100000 >> return (0.1, Nothing))
-               (\ _ (pos, vel) -> putStrLn ("pos: " ++ show pos ++ ", vel: " ++ show vel) >> draw pos >> return False)
-               (fallingBall 10.0)
+main = do
+    oldTime <- newIORef (0 :: Int)
+    rh <- reactInit (initGL) (\_ _ b -> b >> return False)
+                    mainSF
+    displayCallback $= return ()
+    idleCallback $= Just (idle oldTime rh)
+    oldTime' <- get elapsedTime
+    writeIORef oldTime oldTime'
+    mainLoop
+
+-- | Reactimation iteration, supplying the input
+idle :: IORef Int ->
+        ReactHandle () (IO ()) -> IO ()
+idle oldTime rh = do
+    newTime' <- get elapsedTime
+    oldTime' <- get oldTime
+    let dt = let dt' = (fromIntegral $ newTime' - oldTime') / 50
+             in if dt' < 0.8 then dt' else 0.8
+    _ <- react rh (dt, Nothing)
+    writeIORef oldTime newTime'
+    return ()

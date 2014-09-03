@@ -43,7 +43,7 @@ draw pos = do
     clear [ColorBuffer, DepthBuffer]
     loadIdentity
     -- TODO: How do you actually do this? As in: safely?
-    renderPlayer $ vector3 2 (unsafeCoerce pos) 2
+    renderPlayer $ vector3 2 (unsafeCoerce pos) (-30)
     swapBuffers
     where
         size = 6
