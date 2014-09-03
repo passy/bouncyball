@@ -1,3 +1,5 @@
+{-# LANGUAGE Arrows #-}
+
 module Main where
 
 import Data.IORef
@@ -7,11 +9,15 @@ import Graphics.UI.GLUT hiding (Level,Vector3(..),normalize)
 import Graphics (initGL, draw)
 import Types
 
-fallingBall :: Pos -> SF () (Pos, Vel)
-fallingBall y0 = (constant (-9.81) >>> integral) >>> ((integral >>^ (+ y0)) &&& identity)
+fallingBall :: Pos -> Vel -> SF () (Pos, Vel)
+fallingBall y0 v0 =
+    proc _ -> do
+        v <- integral >>^ (+ v0) -< (-9.81)
+        y <- integral >>^ (+ y0) -< v
+        returnA -< (y, v)
 
 mainSF :: SF () (IO ())
-mainSF = (fallingBall 10.0) >>^ \ (pos, vel) -> putStrLn ("pos: " ++ show pos ++ ", vel: " ++ show vel) >> draw pos
+mainSF = (fallingBall 10.0 0.0) >>^ \ (pos, vel) -> putStrLn ("pos: " ++ show pos ++ ", vel: " ++ show vel) >> draw pos
 
 -- | Main, initializes Yampa and sets up reactimation loop
 main :: IO ()
