@@ -18,7 +18,7 @@ fallingBall y0 v0 =
         returnA -< (y, v)
 
 bouncingBall :: Pos -> Vel -> SF () (Pos, Vel)
-bouncingBall y0 v0 = switch (bb y0 v0) (\ (pos, vel) -> bouncingBall pos (-vel))
+bouncingBall y0 v0 = switch (bb y0 v0) bswitch
     where
         bb y0' v0' = proc input -> do
             (pos, vel) <- fallingBall y0' v0' -< input
@@ -26,6 +26,9 @@ bouncingBall y0 v0 = switch (bb y0 v0) (\ (pos, vel) -> bouncingBall pos (-vel))
             -- caught by the switch above.
             event' <- edge -< pos <= 0
             returnA -< ((pos, vel), event' `tag` (pos, vel))
+        bswitch (pos, vel)
+            | abs vel < 1.0 = constant (0.0, 0.0)
+            | otherwise     = bouncingBall pos (-vel * 0.6)
 
 mainSF :: SF () (IO ())
 mainSF = (bouncingBall 10.0 0.0) >>^ \ (pos, vel) -> putStrLn ("pos: " ++ show pos ++ ", vel: " ++ show vel) >> draw pos
