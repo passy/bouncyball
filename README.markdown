@@ -13,4 +13,4 @@ cabal run
 
 ## What's it look like?
 
-![like this](screenshot.png)
+![like this](screencap.gif)
